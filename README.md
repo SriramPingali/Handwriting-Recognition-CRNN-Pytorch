@@ -197,9 +197,3 @@ python train.py --trainroot path/to/train/dataset --valroot path/to/val/dataset
 [meijieru/crnn.pytorch](<https://github.com/meijieru/crnn.pytorch>)
 
 [Sierkinhane/crnn_chinese_characters_rec](<https://github.com/Sierkinhane/crnn_chinese_characters_rec>)
-
-||||||| merged common ancestors
-=======
-# Image-To-Text
-Encoder Decoder module for conversion of hand written text to digital text
->>>>>>> be0866a89dba348fb35e014b66fc08618aca4ea7
