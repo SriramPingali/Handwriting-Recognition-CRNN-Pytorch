@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Convolutional Recurrent Neural Network + CTCLoss 
 
 I think i have fixed the ctcloss nan problem!
