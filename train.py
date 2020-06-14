@@ -256,7 +256,7 @@ def train(net, criterion, optimizer, train_iter):
     
     preds = crnn(image)
     preds_size = Variable(torch.LongTensor([preds.size(0)] * batch_size))
-    print("Label: ", text[0], '\nOutput: ', torch.argmax(preds, 2)[:, 0])
+    # print("Label: ", text[0], '\nOutput: ', torch.argmax(preds, 2)[:, 0])
     cost = criterion(preds, text, preds_size, length) / batch_size
     
     optimizer.zero_grad()

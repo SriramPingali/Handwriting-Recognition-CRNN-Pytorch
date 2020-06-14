@@ -1,7 +1,4 @@
-import alphabets
-
 # about data and net
-# alphabet = alphabets.alphabet
 alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"!#&\'()*+,-./0123456789:;?'
 keep_ratio = False # whether to keep ratio for image resize
 manualSeed = 1234 # reproduce experiemnt
