@@ -13,6 +13,45 @@ from PIL import Image
 import numpy as np
 
 
+class dataset(Dataset):
+
+    def __init__(self, image_root, label_root, img_x, img_y):
+        """Init function should not do any heavy lifting, but
+            must initialize how many items are available in this data set.
+        """
+        self.images_path = image_root
+        self.labels_path = label_root
+        self.data_len = 0
+        self.images = []
+        self.labels = open(self.labels_path, "r").readlines()
+        self.transform = transforms.Compose([
+            transforms.Resize((img_x, img_y)),  
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        
+        for root, dirs, files in os.walk(self.images_path):
+            for file in files:
+                if file.endswith('.png'):
+                    self.data_len += 1
+                    temp = file.split("-")
+                    self.images.append(self.images_path + temp[0] + '/' + temp[0] + "-" + temp[1] + "/" + file)
+
+    def __len__(self):
+        """return number of points in our dataset"""
+        return(self.data_len)
+
+    def __getitem__(self, idx):
+        """ Here we have to return the item requested by `idx`
+            The PyTorch DataLoader class will use this method to make an iterable for
+            our training or validation loop.
+        """
+        img = self.images[idx]
+        label = self.labels[idx]
+        img = Image.open(img)
+        img = img.convert('RGB')
+        img = self.transform(img)
+        return(img, label[:-1])
+
 class lmdbDataset(Dataset):
 
     def __init__(self, root=None, transform=None, target_transform=None):

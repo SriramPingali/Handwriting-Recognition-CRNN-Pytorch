@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import torch
+import params
 import torch.nn as nn
 from torch.autograd import Variable
 import collections
@@ -18,17 +19,63 @@ class strLabelConverter(object):
         ignore_case (bool, default=True): whether or not to ignore all of the case.
     """
 
-    def __init__(self, alphabet, ignore_case=False):
-        self._ignore_case = ignore_case
-        if self._ignore_case:
-            alphabet = alphabet.lower()
-        self.alphabet = alphabet + '-'  # for `-1` index
+    def __init__(self):
+        # self._ignore_case = ignore_case
+        # if self._ignore_case:
+        #     alphabet = alphabet.lower()
+        # self.alphabet = alphabet + '-'  # for `-1` index
 
-        self.dict = {}
-        for i, char in enumerate(alphabet):
-            # NOTE: 0 is reserved for 'blank' required by wrap_ctc
-            self.dict[char] = i + 1
+        # self.dict = {}
+        # for i, char in enumerate(alphabet):
+        #     # NOTE: 0 is reserved for 'blank' required by wrap_ctc
+        #     self.dict[char] = i + 1
     
+        self.eng_alphabets = params.alphabet
+        self.pad_char = '-PAD-'
+
+        self.eng_alpha2index = {self.pad_char: 0}
+        for index, alpha in enumerate(self.eng_alphabets):
+            self.eng_alpha2index[alpha] = index+1
+
+    def word_rep(self, word, letter2index, max_out_chars, device = 'cpu'):
+        rep = torch.zeros(max_out_chars).to(device)
+        if max_out_chars < len(word) + 1:
+            for i in range(max_out_chars):
+                pos = letter2index[word[i]]
+                rep[i] = pos
+            return(rep ,max_out_chars)
+        for letter_index, letter in enumerate(word):
+            pos = letter2index[letter]
+            rep[letter_index] = pos
+        pad_pos = letter2index[self.pad_char]
+        rep[letter_index+1] = pad_pos
+        return(rep, len(word))
+
+    def words_rep(self, labels_str, max_out_chars = 20, batch_size = params.batchSize, device = 'cpu'):
+        words_rep = []
+        output_cat = None
+        output_2 = None
+        lengths_tensor = None
+        lengths = []
+        for i, label in enumerate(labels_str):
+            rep, lnt = self.word_rep(label, self.eng_alpha2index, max_out_chars, device)
+            words_rep.append(rep)
+            if lengths_tensor is None:
+                lengths_tensor = torch.empty(len(labels_str), dtype = torch.long)
+            if output_cat is None:
+                output_cat_size = list(rep.size())
+                output_cat_size.insert(0, len(labels_str))
+                output_cat = torch.empty(*output_cat_size, dtype=rep.dtype, device=rep.device)
+            if output_2 is None:
+                output_2 = rep[:lnt]
+            else:
+                output_2 = torch.cat([output_2, rep[:lnt]], dim = 0)
+
+            output_cat[i, :] = rep
+            lengths_tensor[i] = lnt
+            lengths.append(lnt)
+        return(output_cat, lengths_tensor)
+
     def encode(self, text):
         """Support batch or single str.
 

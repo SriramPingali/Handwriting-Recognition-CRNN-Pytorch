@@ -1,7 +1,8 @@
 import alphabets
 
 # about data and net
-alphabet = alphabets.alphabet
+# alphabet = alphabets.alphabet
+alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"!#&\'()*+,-./0123456789:;?'
 keep_ratio = False # whether to keep ratio for image resize
 manualSeed = 1234 # reproduce experiemnt
 random_sample = True # whether to sample the dataset with random sampler
@@ -11,7 +12,7 @@ nh = 256 # size of the lstm hidden state
 nc = 1
 pretrained = '' # path to pretrained model (to continue training)
 expr_dir = 'expr' # where to store samples and models
-dealwith_lossnan = False # whether to replace all nan/inf in gradients to zero
+dealwith_lossnan = True # whether to replace all nan/inf in gradients to zero
 
 # hardware
 cuda = True # enables cuda

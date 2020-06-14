@@ -17,6 +17,7 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 import os
 import utils
+from utils import strLabelConverter
 import dataset
 
 import models.crnn as net
@@ -44,46 +45,7 @@ if torch.cuda.is_available() and not params.cuda:
 """
 In this block
     Get train and val data_loader
-"""
-class dataset(Dataset):
-
-    def __init__(self, image_root, label_root, img_x, img_y):
-        """Init function should not do any heavy lifting, but
-            must initialize how many items are available in this data set.
-        """
-        self.images_path = image_root
-        self.labels_path = label_root
-        self.data_len = 0
-        self.images = []
-        self.labels = open(self.labels_path, "r").readlines()
-        self.transform = transforms.Compose([
-            transforms.Resize((img_x, img_y)),  
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-        
-        for root, dirs, files in os.walk(self.images_path):
-            for file in files:
-                if file.endswith('.png'):
-                    self.data_len += 1
-                    temp = file.split("-")
-                    self.images.append(self.images_path + temp[0] + '/' + temp[0] + "-" + temp[1] + "/" + file)
-
-    def __len__(self):
-        """return number of points in our dataset"""
-        return(self.data_len)
-
-    def __getitem__(self, idx):
-        """ Here we have to return the item requested by `idx`
-            The PyTorch DataLoader class will use this method to make an iterable for
-            our training or validation loop.
-        """
-        img = self.images[idx]
-        label = self.labels[idx]
-        img = Image.open(img)
-        img = img.convert('RGB')
-        img = self.transform(img)
-        return(img, label[:-1])
-    
+"""    
 def loader_param():
     img_x = 32
     img_y = 128
@@ -91,59 +53,9 @@ def loader_param():
     return(img_x, img_y, batch_size)
 
 img_x, img_y, batch_size = loader_param()
-train_set = dataset(image_root="../IAM Dataset/words/", label_root = "../IAM Dataset/ascii/labels.txt", img_x = img_x, img_y = img_y)
-# train_set.__getitem__(345)
+train_set = dataset.dataset(image_root="../IAM Dataset/words/", label_root = "../IAM Dataset/ascii/labels.txt", img_x = img_x, img_y = img_y)
 train_loader = torch.utils.data.DataLoader(train_set, batch_size=params.batchSize, shuffle=True, num_workers=0)
 val_loader = train_loader
-
-eng_alphabets = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"!#&\'()*+,-./0123456789:;?'
-pad_char = '-PAD-'
-
-eng_alpha2index = {pad_char: 0}
-for index, alpha in enumerate(eng_alphabets):
-    eng_alpha2index[alpha] = index+1
-
-def word_rep(word, letter2index, max_out_chars, device = 'cpu'):
-    rep = torch.zeros(max_out_chars).to(device)
-    if max_out_chars < len(word) + 1:
-        for i in range(max_out_chars):
-            pos = letter2index[word[i]]
-            rep[i] = pos
-        return(rep ,max_out_chars)
-    for letter_index, letter in enumerate(word):
-        pos = letter2index[letter]
-        rep[letter_index] = pos
-    pad_pos = letter2index[pad_char]
-    rep[letter_index+1] = pad_pos
-    return(rep, len(word))
-
-def words_rep(labels_str, max_out_chars = 20, batch_size = params.batchSize):
-    words_rep = []
-    output_cat = None
-    output_2 = None
-    lengths_tensor = None
-    lengths = []
-    for i, label in enumerate(labels_str):
-        rep, lnt = word_rep(label, eng_alpha2index, max_out_chars, device)
-        words_rep.append(rep)
-#         print(rep[0:lnt])
-        if lengths_tensor is None:
-            lengths_tensor = torch.empty(len(labels_str), dtype = torch.long)
-        if output_cat is None:
-            output_cat_size = list(rep.size())
-            output_cat_size.insert(0, len(labels_str))
-            output_cat = torch.empty(*output_cat_size, dtype=rep.dtype, device=rep.device)
-#             print(output_cat.shape)
-        if output_2 is None:
-            output_2 = rep[:lnt]
-        else:
-            output_2 = torch.cat([output_2, rep[:lnt]], dim = 0)
-
-        output_cat[i, :] = rep
-        lengths_tensor[i] = lnt
-        lengths.append(lnt)
-#     print(output_2)
-    return(output_cat, lengths_tensor)
 
 # def data_loader():
 #     # train
@@ -206,7 +118,7 @@ In this block
 loss_avg = utils.averager()
 
 # Convert between str and label.
-converter = utils.strLabelConverter(params.alphabet)
+converter = strLabelConverter()
 
 # -----------------------------------------------
 """
@@ -335,19 +247,19 @@ def train(net, criterion, optimizer, train_iter):
 
     data = train_iter.next()
     cpu_images, cpu_texts = data
-    text, length = words_rep(cpu_texts, max_out_chars = 20, batch_size = params.batchSize)
+    text, length = converter.words_rep(labels_str = cpu_texts, max_out_chars = 20, batch_size = params.batchSize, device = device)
     batch_size = cpu_images.size(0)
     utils.loadData(image, cpu_images)
     # t, l = converter.encode(cpu_texts)
     # utils.loadData(text, t)
     # utils.loadData(length, l)
     
-    optimizer.zero_grad()
     preds = crnn(image)
     preds_size = Variable(torch.LongTensor([preds.size(0)] * batch_size))
-    # print("Label: ", text[0], '\nOutput: ', torch.argmax(preds, 2)[:, 0])
+    print("Label: ", text[0], '\nOutput: ', torch.argmax(preds, 2)[:, 0])
     cost = criterion(preds, text, preds_size, length) / batch_size
-    # crnn.zero_grad()
+    
+    optimizer.zero_grad()
     cost.backward()
     optimizer.step()
     return cost
