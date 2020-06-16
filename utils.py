@@ -3,9 +3,11 @@
 
 import torch
 import params
+import numpy as np
 import torch.nn as nn
 from torch.autograd import Variable
 import collections
+from torch.utils.data.sampler import SubsetRandomSampler
 
 
 class strLabelConverter(object):
@@ -196,6 +198,29 @@ def oneHot(v, v_length, nc):
 def loadData(v, data):
     with torch.no_grad():
         v.resize_(data.size()).copy_(data)
+
+
+def dataloader(dataset, batch_size, validation_split, shuffle_dataset):
+    random_seed= 42
+
+    # Creating data indices for training and validation splits:
+    dataset_size = len(dataset)
+    indices = list(range(dataset_size))
+    split = int(np.floor(validation_split * dataset_size))
+    if shuffle_dataset :
+        np.random.seed(random_seed)
+        np.random.shuffle(indices)
+    train_indices, val_indices = indices[split:], indices[:split]
+
+    # Creating PT data samplers and loaders:
+    train_sampler = SubsetRandomSampler(train_indices)
+    valid_sampler = SubsetRandomSampler(val_indices)
+
+    train_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, 
+                                               sampler=train_sampler)
+    val_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+                                                    sampler=valid_sampler)
+    return(train_loader, val_loader)
 
 
 def prettyPrint(v):

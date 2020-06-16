@@ -15,8 +15,7 @@ from torch.nn import CTCLoss
 from torch.utils.data.dataset import Dataset
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
-from sklearn.model_selection import train_test_split
-from torch.utils.data.sampler import SubsetRandomSampler
+# from sklearn.model_selection import train_test_split
 import os
 import utils
 import dataset
@@ -55,31 +54,7 @@ def loader_param():
 
 img_x, img_y, batch_size = loader_param()
 dataset = dataset.dataset(image_root="../IAM Dataset/words/", label_root = "../IAM Dataset/ascii/labels.txt", img_x = img_x, img_y = img_y)
-# data_loader = torch.utils.data.DataLoader(dataset, batch_size=params.batchSize, shuffle=True, num_workers=0)
-batch_size = 16
-validation_split = .2
-shuffle_dataset = True
-random_seed= 42
-
-# Creating data indices for training and validation splits:
-dataset_size = len(dataset)
-indices = list(range(dataset_size))
-split = int(np.floor(validation_split * dataset_size))
-if shuffle_dataset :
-    np.random.seed(random_seed)
-    np.random.shuffle(indices)
-train_indices, val_indices = indices[split:], indices[:split]
-
-# Creating PT data samplers and loaders:
-train_sampler = SubsetRandomSampler(train_indices)
-valid_sampler = SubsetRandomSampler(val_indices)
-
-train_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, 
-                                           sampler=train_sampler)
-val_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
-                                                sampler=valid_sampler)
-
-# val_loader = data_loader
+train_loader, val_loader = utils.dataloader(dataset = dataset, batch_size = 16, validation_split = 0.2, shuffle_dataset = True)
 
 # def data_loader():
 #     # train
