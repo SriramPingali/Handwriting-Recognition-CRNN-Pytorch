@@ -1,4 +1,5 @@
 import torch
+import torchvision.transforms as transforms
 from torch.autograd import Variable
 import utils
 import dataset
@@ -28,15 +29,22 @@ if params.multi_gpu:
     model = torch.nn.DataParallel(model)
 model.load_state_dict(torch.load(model_path))
 
-converter = utils.strLabelConverter(params.alphabet)
+converter = utils.strLabelConverter()
 
-transformer = dataset.resizeNormalize((100, 32))
-image = Image.open(image_path).convert('L')
-image = transformer(image)
-if torch.cuda.is_available():
-    image = image.cuda()
-image = image.view(1, *image.size())
-image = Variable(image)
+# transformer = dataset.resizeNormalize((100, 32))
+# image = Image.open(image_path).convert('L')
+# image = transformer(image)
+# if torch.cuda.is_available():
+#     image = image.cuda()
+# image = image.view(1, *image.size())
+# image = Variable(image)
+transformer = transforms.Compose([
+            transforms.Resize((img_x, img_y)),  
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+img = Image.open(image_path)
+img = img.convert('RGB')
+image = transformer(img)
 
 model.eval()
 preds = model(image)

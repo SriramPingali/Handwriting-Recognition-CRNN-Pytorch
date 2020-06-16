@@ -15,9 +15,10 @@ from torch.nn import CTCLoss
 from torch.utils.data.dataset import Dataset
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
+from sklearn.model_selection import train_test_split
+from torch.utils.data.sampler import SubsetRandomSampler
 import os
 import utils
-from utils import strLabelConverter
 import dataset
 
 import models.crnn as net
@@ -53,9 +54,32 @@ def loader_param():
     return(img_x, img_y, batch_size)
 
 img_x, img_y, batch_size = loader_param()
-train_set = dataset.dataset(image_root="../IAM Dataset/words/", label_root = "../IAM Dataset/ascii/labels.txt", img_x = img_x, img_y = img_y)
-train_loader = torch.utils.data.DataLoader(train_set, batch_size=params.batchSize, shuffle=True, num_workers=0)
-val_loader = train_loader
+dataset = dataset.dataset(image_root="../IAM Dataset/words/", label_root = "../IAM Dataset/ascii/labels.txt", img_x = img_x, img_y = img_y)
+# data_loader = torch.utils.data.DataLoader(dataset, batch_size=params.batchSize, shuffle=True, num_workers=0)
+batch_size = 16
+validation_split = .2
+shuffle_dataset = True
+random_seed= 42
+
+# Creating data indices for training and validation splits:
+dataset_size = len(dataset)
+indices = list(range(dataset_size))
+split = int(np.floor(validation_split * dataset_size))
+if shuffle_dataset :
+    np.random.seed(random_seed)
+    np.random.shuffle(indices)
+train_indices, val_indices = indices[split:], indices[:split]
+
+# Creating PT data samplers and loaders:
+train_sampler = SubsetRandomSampler(train_indices)
+valid_sampler = SubsetRandomSampler(val_indices)
+
+train_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, 
+                                           sampler=train_sampler)
+val_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+                                                sampler=valid_sampler)
+
+# val_loader = data_loader
 
 # def data_loader():
 #     # train
@@ -118,7 +142,7 @@ In this block
 loss_avg = utils.averager()
 
 # Convert between str and label.
-converter = strLabelConverter()
+converter = utils.strLabelConverter()
 
 # -----------------------------------------------
 """
@@ -279,8 +303,8 @@ if __name__ == "__main__":
                       (epoch, params.nepoch, i, len(train_loader), loss_avg.val()))
                 loss_avg.reset()
 
-            # if i % params.valInterval == 0:
-            #     val(crnn, criterion)
+            if i % params.valInterval == 0:
+                val(crnn, criterion)
 
             # do checkpointing
             if i % params.saveInterval == 0:
