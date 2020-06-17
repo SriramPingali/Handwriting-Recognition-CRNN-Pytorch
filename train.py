@@ -56,6 +56,7 @@ img_x, img_y, batch_size = loader_param()
 dataset = dataset.dataset(image_root="../IAM Dataset/words/", label_root = "../IAM Dataset/ascii/labels.txt", img_x = img_x, img_y = img_y)
 train_loader, val_loader = utils.dataloader(dataset = dataset, batch_size = 16, validation_split = 0.2, shuffle_dataset = True)
 
+
 # def data_loader():
 #     # train
 #     train_dataset = dataset.lmdbDataset(root=args.trainroot)
@@ -192,7 +193,55 @@ if params.dealwith_lossnan:
 
 # -----------------------------------------------
 
-def val(net, criterion):
+# def val(net, criterion):
+#     print('Start val')
+
+#     for p in crnn.parameters():
+#         p.requires_grad = False
+
+#     net.eval()
+#     val_iter = iter(val_loader)
+
+#     i = 0
+#     n_correct = 0
+#     loss_avg = utils.averager() # The blobal loss_avg is used by train
+
+#     max_iter = len(val_loader)
+#     for i in range(max_iter):
+#         data = val_iter.next()
+#         i += 1
+#         cpu_images, cpu_texts = data
+#         text, length = converter.words_rep(labels_str = cpu_texts, max_out_chars = 20, batch_size = params.batchSize, device = device)
+#         batch_size = cpu_images.size(0)
+#         utils.loadData(image, cpu_images)
+#         # t, l = converter.encode(cpu_texts)
+#         # utils.loadData(text, t)
+#         # utils.loadData(length, l)
+
+#         preds = crnn(image)
+#         preds_size = Variable(torch.LongTensor([preds.size(0)] * batch_size))
+#         cost = criterion(preds, text, preds_size, length) / batch_size
+#         loss_avg.add(cost)
+
+#         _, preds = preds.max(2)
+#         preds = preds.transpose(1, 0).contiguous().view(-1)
+#         sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
+#         print(sim_preds.shape)
+#         cpu_texts_decode = []
+#         for i in cpu_texts:
+#             cpu_texts_decode.append(i.decode('utf-8', 'strict'))
+#         for pred, target in zip(sim_preds, cpu_texts_decode):
+#             if pred == target:
+#                 n_correct += 1
+
+#     raw_preds = converter.decode(preds.data, preds_size.data, raw=True)[:params.n_val_disp]
+#     for raw_pred, pred, gt in zip(raw_preds, sim_preds, cpu_texts_decode):
+#         print('%-20s => %-20s, gt: %-20s' % (raw_pred, pred, gt))
+
+#     accuracy = n_correct / float(max_iter * params.batchSize)
+#     print('Val loss: %f, accuracy: %f' % (loss_avg.val(), accuracy))
+
+def val(net, criterion, max_iter=100):
     print('Start val')
 
     for p in crnn.parameters():
@@ -203,7 +252,7 @@ def val(net, criterion):
 
     i = 0
     n_correct = 0
-    loss_avg = utils.averager() # The blobal loss_avg is used by train
+    loss_avg = utils.averager()
 
     max_iter = len(val_loader)
     for i in range(max_iter):
@@ -212,31 +261,29 @@ def val(net, criterion):
         cpu_images, cpu_texts = data
         batch_size = cpu_images.size(0)
         utils.loadData(image, cpu_images)
-        t, l = converter.encode(cpu_texts)
-        utils.loadData(text, t)
-        utils.loadData(length, l)
+        # t, l = converter.encode(cpu_texts)
+        # utils.loadData(text, t)
+        # utils.loadData(length, l)
 
         preds = crnn(image)
-        preds_size = Variable(torch.LongTensor([preds.size(0)] * batch_size))
+        preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
         cost = criterion(preds, text, preds_size, length) / batch_size
         loss_avg.add(cost)
 
         _, preds = preds.max(2)
+        preds = preds.squeeze(2)
         preds = preds.transpose(1, 0).contiguous().view(-1)
         sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
-        cpu_texts_decode = []
-        for i in cpu_texts:
-            cpu_texts_decode.append(i.decode('utf-8', 'strict'))
-        for pred, target in zip(sim_preds, cpu_texts_decode):
-            if pred == target:
+        for pred, target in zip(sim_preds, cpu_texts):
+            if pred == target.lower():
                 n_correct += 1
 
-    raw_preds = converter.decode(preds.data, preds_size.data, raw=True)[:params.n_val_disp]
-    for raw_pred, pred, gt in zip(raw_preds, sim_preds, cpu_texts_decode):
+    raw_preds = converter.decode(preds.data, preds_size.data, raw=True)[:opt.n_test_disp]
+    for raw_pred, pred, gt in zip(raw_preds, sim_preds, cpu_texts):
         print('%-20s => %-20s, gt: %-20s' % (raw_pred, pred, gt))
 
-    accuracy = n_correct / float(max_iter * params.batchSize)
-    print('Val loss: %f, accuray: %f' % (loss_avg.val(), accuracy))
+    accuracy = n_correct / float(max_iter * opt.batchSize)
+    print('Test loss: %f, accuray: %f' % (loss_avg.val(), accuracy))
 
 
 def train(net, criterion, optimizer, train_iter):
