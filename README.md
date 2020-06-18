@@ -13,7 +13,6 @@ Enjoy it!
 > PS: Once there is ctclossnan, please
 > 1. Change the `batchSize` to smaller (eg: 8, 16, 32)
 > 2. Change the `lr` to smaller (eg: 0.00001, 0.0001)
-> 3. Contact me by emailing to holmeyoung@gmail.com
 
 ## Dependence
 
@@ -24,24 +23,11 @@ Enjoy it!
 - Tesla P40 - Nvidia
 
 ## Run demo
-
-- Download a pretrained model from [Baidu Cloud](https://pan.baidu.com/s/1FmJhYf1Wy-LUaz4V2WpF7g) (extraction code: `si32`)
-- People who cannot access Baidu can download a copy from [Google Drive](https://drive.google.com/drive/folders/1FhXvPtitX6tWYocFZiZBRzVHjK2o640u?usp=sharing)
-
 - Run demo
 
   ```sh
   python demo.py -m path/to/model -i data/demo.jpg
   ```
-
-   ![demo](https://raw.githubusercontent.com/Holmeyoung/crnn_pytorch/master/demo/demo.jpg)
-
-  Expected output
-
-  ```sh
-  -妳----真---的的---可---------以 => 妳真的可以
-  ```
-
   
 
 ## Feature
@@ -49,12 +35,6 @@ Enjoy it!
 - Variable length
 
   It support variable length.
-
-
-
-- Chinese support
-
-  I change it to `binary mode` when reading the key and value, so you can use it to do Chinese OCR.
 
 
 
