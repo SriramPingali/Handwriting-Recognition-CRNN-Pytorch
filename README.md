@@ -62,90 +62,21 @@ Enjoy it!
 
 ### Prepare data
 
-#### Folder mode
+The data-loader expects the IAM dataset [5] (or any other dataset that is compatible with it) in the data/ directory. Follow these instructions to get the dataset:
 
-1. Put your images in a folder and organize your images in the following format:
-
-   `label_number.jpg` 
-
-   For example
-
-   - English
-
-   ```sh
-   hi_0.jpg hello_1.jpg English_2.jpg English_3.jpg E n g l i s h_4.jpg...
-   ```
-
-   - Chinese
-
-   ```sh
-   一身转战_0.jpg 三千里_1.jpg 一剑曾当百万师_2.jpg 一剑曾当百万师_3.jpg 一 剑 曾 当 百 万 师_3.jpg ...
-   ```
-
-   So you can see, the number is used to distinguish the same label.
-
-
-
-2. Run the `create_dataset.py` in `tool` folder by
-
-   ```sh
-   python tool/create_dataset.py --out lmdb/data/output/path --folder path/to/folder
-   ```
-
-   
-
-3. Use the same step to create train and val data.
-
-
-
-4. The advantage of the folder mode is that it's convenient! But due to some illegal character can't be in the path
-
-    ![Illegal character](https://raw.githubusercontent.com/Holmeyoung/crnn_pytorch/master/demo/illegal_character.png)
-
-   So the disadvantage of the folder mode is that it's labels are limited. 
-
-
-
-#### File mode
-
-1. Your data file should like
-
-   ```sh
-   absolute/path/to/image/一身转战_0.jpg
-   一身转战
-   absolute/path/to/image/三千里_1.jpg
-   三千里
-   absolute/path/to/image/一剑曾当百万师_2.jpg
-   一剑曾当百万师
-   absolute/path/to/image/3.jpg
-   一剑曾当百万师
-   absolute/path/to/image/一 剑 曾 当 百 万 师_4.jpg
-   一 剑 曾 当 百 万 师
-   absolute/path/to/image/xxx.jpg
-   label of xxx.jpg
-   .
-   .
-   .
-   ```
-
-   > DO REMEMBER:
-   >
-   > 1. It must be the absolute path to image.
-   > 2. The first line can't be empty.
-   > 3. There are no blank line between two data.
-
-
-
-2. Run the `create_dataset.py` in `tool` folder by
-
-   ```sh
-   python tool/create_dataset.py --out lmdb/data/output/path --file path/to/file
-   ```
-
-   
-
-3. Use the same step to create train and val data.
-
+  1. Register for free at this website.
+  
+  2. Download words/words.tgz.
+  
+  3. Download ascii/words.txt.
+  
+  4. Put words.txt into the data/ directory.
+  
+  5. Create the directory data/words/.
+  
+  6. Put the content (directories a01, a02, ...) of words.tgz into data/words/.
+  
+  7. Go to data/ and run python checkDirs.py for a rough check if everything is ok.
 
 
 ### Change parameters and alphabets
