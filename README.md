@@ -62,9 +62,9 @@ Enjoy it!
 
 ### Prepare data
 
-The data-loader expects the IAM dataset [5] (or any other dataset that is compatible with it) in the data/ directory. Follow these instructions to get the dataset:
+The data-loader expects the IAM dataset (or any other dataset that is compatible with it) in the data/ directory. Follow these instructions to get the dataset:
 
-  1. Register for free at this website.
+  1. Register for free at this [website](http://www.fki.inf.unibe.ch/databases/iam-handwriting-database).
   
   2. Download words/words.tgz.
   
